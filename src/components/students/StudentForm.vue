@@ -44,8 +44,8 @@ watch(
       student.value.maKhoa = data.maKhoa || ''
       student.value.maLop = data.maLop || ''
       student.value.diaChi = data.diaChi || ''
-      student.value.anhDaiDien = data.anh_dai_dien || ''
-      previewUrl.value = data.anh_dai_dien || '/image/default-avatar.png'
+      student.value.anhDaiDien = data.anhDaiDien || ''
+      previewUrl.value = data.anhDaiDien || '/image/default-avatar.png'
       // Gọi lại API lấy lớp theo mã khoa
       //   if (data.maKhoa) {
       //     try {

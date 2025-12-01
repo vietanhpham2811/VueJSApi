@@ -1,6 +1,20 @@
 <script setup>
-import { defineProps } from 'vue'
+// ...existing code...
 const props = defineProps({ students: Array })
+import { defineProps, ref, computed } from 'vue'
+const currentPage = ref(1)
+const pageSize = 5
+const totalPages = computed(() => Math.ceil(props.students.length / pageSize))
+const pagedStudents = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return props.students.slice(start, start + pageSize)
+})
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
 </script>
 
 <template>
@@ -22,7 +36,7 @@ const props = defineProps({ students: Array })
         </thead>
         <tbody>
           <tr
-            v-for="sv in students"
+            v-for="sv in pagedStudents"
             :key="sv.maSv"
             @click="$emit('select', sv.maSv)"
             style="cursor: pointer"
@@ -51,5 +65,23 @@ const props = defineProps({ students: Array })
         </tbody>
       </table>
     </div>
+    <nav v-if="totalPages > 1" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <button class="page-link" @click="goToPage(currentPage - 1)">Trước</button>
+        </li>
+        <li
+          v-for="page in totalPages"
+          :key="page"
+          class="page-item"
+          :class="{ active: page === currentPage }"
+        >
+          <button class="page-link" @click="goToPage(page)">{{ page }}</button>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <button class="page-link" @click="goToPage(currentPage + 1)">Sau</button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>

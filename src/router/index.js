@@ -23,6 +23,11 @@ const router = createRouter({
           name: 'student',
           component: () => import('@/views/StudentPage.vue'),
         },
+        {
+          path: 'users',
+          name: 'users',
+          component: () => import('@/views/UserList.vue'),
+        },
         // Thêm các trang khác ở đây
       ],
     },
