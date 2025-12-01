@@ -1,40 +1,41 @@
 import axios from 'axios'
-
+import toastr from 'toastr'
+import 'toastr/build/toastr.min.css'
 // Tạo instance axios
 const apiClient = axios.create({
-  baseURL: '/api', // Proxy từ vite.config.js
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  withCredentials: true, // ← QUAN TRỌNG: Cho phép gửi cookies
+  withCredentials: true, // Cho phép gửi cookie
   timeout: 10000,
 })
 
-// Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Cookie tự động gửi do withCredentials: true
     return config
   },
   (error) => Promise.reject(error),
 )
 
-// Response interceptor - Xử lý lỗi 401
+// xử lý lỗi 401
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response && error.response.status === 401) {
       try {
-        // Gọi API refresh token
+        // gọi api refresh token
         await apiClient.post('/auth/refresh-token')
-        // Sau khi lấy được access token mới, retry lại request cũ
+        // sau khi lấy được access token mới, gọi lại request cũ
         return apiClient(error.config)
       } catch (refreshError) {
-        // Nếu refresh cũng lỗi, chuyển về login
+        // nếu refresh cũng lỗi, chuyển về login
         localStorage.removeItem('user')
         window.location.href = '/login'
       }
+    } else if (error.response?.status === 403) {
+      toastr.error('Bạn không có quyền thực hiện chức năng này')
     }
     return Promise.reject(error)
   },

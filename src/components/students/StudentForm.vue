@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import apiClient from '@/api'
 
-const emit = defineEmits(['added'])
+const emit = defineEmits(['loadStudents'])
 const props = defineProps({ dsKhoa: Array, studentData: Object })
 
 const student = ref({
@@ -45,17 +45,32 @@ watch(
       student.value.anhDaiDien = data.anh_dai_dien || ''
       previewUrl.value = data.anh_dai_dien || '/image/default-avatar.png'
       // Gọi lại API lấy lớp theo mã khoa
-      if (data.maKhoa) {
-        try {
-          const res = await apiClient.get(`/sinhvien/loadlop?maKhoa=${data.maKhoa}`)
-          dsLop.value = res.data.lstLop || []
-        } catch (err) {
-          dsLop.value = []
-        }
-      }
+      //   if (data.maKhoa) {
+      //     try {
+      //       const res = await apiClient.get(`/sinhvien/loadlop?maKhoa=${data.maKhoa}`)
+      //       dsLop.value = res.data.lstLop || []
+      //     } catch (err) {
+      //       dsLop.value = []
+      //     }
+      //   }
     }
   },
   { immediate: true },
+)
+watch(
+  () => student.value.maKhoa,
+  async (maKhoa) => {
+    if (maKhoa) {
+      try {
+        const res = await apiClient.get(`/sinhvien/loadlop?maKhoa=${maKhoa}`)
+        dsLop.value = res.data.lstLop || []
+      } catch (err) {
+        dsLop.value = []
+      }
+    } else {
+      dsLop.value = []
+    }
+  },
 )
 
 // watch(
@@ -90,17 +105,24 @@ const submitForm = async () => {
   success.value = ''
   try {
     const formData = new FormData()
-    Object.entries(student.value).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        formData.append(key, value)
-      }
-    })
+    //
+    const studentData = { ...student.value }
+    //them moi mac dinh gan maSV =0
+    if (!studentData.maSV) {
+      studentData.maSV = 0
+    }
+    delete studentData.anhDaiDien
+    formData.append('strData', JSON.stringify(studentData))
+    // Thêm ảnh nếu có
+    if (student.value.anhDaiDien) {
+      formData.append('AnhDaiDien', student.value.anhDaiDien)
+    }
     await apiClient.post('/sinhvien/SaveData', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    success.value = 'Thêm sinh viên thành công!'
+    toastr.success('Cập nhật thông tin sinh viên thành công')
     resetForm()
-    emit('added')
+    emit('loadStudents')
   } catch (err) {
     error.value = err.response?.data?.message || 'Có lỗi xảy ra!'
   }
@@ -128,13 +150,13 @@ const submitForm = async () => {
           </div>
           <div class="col-md-9">
             <div class="row mb-2">
-              <div class="col-md-6">
+              <div class="col-md-6 d-none">
+                <label class="form-label">Mã SV</label>
+                <input v-model="student.maSV" class="form-control" placeholder="Mã SV" />
+              </div>
+              <div class="col-md-12">
                 <label class="form-label">Họ tên</label>
                 <input v-model="student.hoTen" class="form-control" placeholder="Họ tên" required />
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Mã SV</label>
-                <input v-model="student.maSV" class="form-control" placeholder="Mã SV" required />
               </div>
             </div>
             <div class="row mb-2">

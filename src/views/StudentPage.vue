@@ -58,7 +58,7 @@ onMounted(loadStudents)
     </div>
     <div class="card shadow mb-4">
       <div class="card-body">
-        <StudentForm :dsKhoa="dsKhoa" :studentData="selectedStudent" @added="loadStudents" />
+        <StudentForm :dsKhoa="dsKhoa" :studentData="selectedStudent" @loadStudents="loadStudents" />
       </div>
     </div>
     <div class="card shadow">
