@@ -1,5 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
+import toastr from 'toastr'
+import 'toastr/build/toastr.min.css'
 import apiClient from '@/api'
 
 const emit = defineEmits(['loadStudents'])
@@ -117,12 +119,16 @@ const submitForm = async () => {
     if (student.value.anhDaiDien) {
       formData.append('AnhDaiDien', student.value.anhDaiDien)
     }
-    await apiClient.post('/sinhvien/SaveData', formData, {
+    const res = await apiClient.post('/sinhvien/SaveData', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    toastr.success('Cập nhật thông tin sinh viên thành công')
-    resetForm()
-    emit('loadStudents')
+    if (res.data.status) {
+      toastr.success('Cập nhật thông tin sinh viên thành công')
+      resetForm()
+      emit('loadStudents')
+    } else {
+      toastr.error(res.data.message || 'Có lỗi xảy ra!')
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Có lỗi xảy ra!'
   }
