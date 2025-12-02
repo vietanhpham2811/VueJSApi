@@ -38,7 +38,7 @@ onMounted(loadStudents)
 <template>
   <div class="container py-4">
     <div class="d-flex flex-column align-items-center mb-4">
-      <div class="bg-white rounded-4 shadow px-5 py-3 position-relative" style="min-width: 340px">
+      <!-- <div class="bg-white rounded-4 shadow px-5 py-3 position-relative" style="min-width: 340px">
         <span
           class="fs-1 fw-bold text-gradient"
           style="
@@ -54,16 +54,17 @@ onMounted(loadStudents)
           style="font-size: 1.5rem"
           >🎓</span
         >
-      </div>
+      </div> -->
     </div>
     <div class="card shadow mb-4">
       <div class="card-body">
+          <h5 class="fw-bold mb-3">Quản lý sinh viên</h5>
         <StudentForm :dsKhoa="dsKhoa" :studentData="selectedStudent" @loadStudents="loadStudents" />
       </div>
     </div>
     <div class="card shadow">
       <div class="card-body">
-        <StudentList :students="students" @select="handleSelect" />
+        <StudentList :students="students" @select="handleSelect" @loadStudents="loadStudents" />
         <div v-if="error" class="alert alert-danger mt-3">{{ error }}</div>
       </div>
     </div>

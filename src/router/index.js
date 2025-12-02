@@ -26,7 +26,7 @@ const router = createRouter({
         {
           path: 'users',
           name: 'users',
-          component: () => import('@/views/UserList.vue'),
+          component: () => import('@/views/UserPage.vue'),
         },
         // Thêm các trang khác ở đây
       ],

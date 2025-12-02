@@ -9,6 +9,12 @@
         <router-link class="nav-link text-white mb-2" active-class="active" to="/student">
           <i class="bi bi-people me-2"></i> Quản lý Sinh viên
         </router-link>
+        <router-link class="nav-link text-white mb-2" active-class="active" to="/other">
+          <i class="bi bi-grid me-2"></i> Quản lý lớp học
+        </router-link>
+        <router-link class="nav-link text-white mb-2" active-class="active" to="/other">
+          <i class="bi bi-grid me-2"></i> Quản lý giáo viên
+        </router-link>
         <router-link class="nav-link text-white mb-2" active-class="active" to="/users">
           <i class="bi bi-grid me-2"></i> Phân quyền
         </router-link>

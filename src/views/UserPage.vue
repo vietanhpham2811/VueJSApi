@@ -1,28 +1,37 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import apiClient from '@/api'
+import RoleChangePopup from '@/components/Users/RoleChangePopup.vue'
 
 const users = ref([])
 const error = ref('')
-const currentUserRole = ref('') // ví dụ: 'admin', 'user', ...
+const currentUserRole = ref('admin') // Giả sử admin để test
+
+const isPopupVisible = ref(false)
+const selectedUser = ref(null)
 
 const loadUsers = async () => {
   error.value = ''
   try {
-    const res = await apiClient.get('/users')
-    users.value = res.data.data
+    const res = await apiClient.get('/Users/listUsers')
+    users.value = res.data
   } catch (err) {
     error.value = err.response?.data?.message || 'Không tải được danh sách người dùng!'
   }
 }
 
-const handleChangeRole = async (userId, newRole) => {
-  try {
-    await apiClient.post(`/users/change-role`, { userId, role: newRole })
-    loadUsers()
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Không đổi được quyền!'
-  }
+const openRolePopup = (user) => {
+  selectedUser.value = user
+  isPopupVisible.value = true
+}
+
+const closeRolePopup = () => {
+  isPopupVisible.value = false
+  selectedUser.value = null
+}
+
+const onRoleChanged = () => {
+  loadUsers()
 }
 
 onMounted(loadUsers)
@@ -35,34 +44,38 @@ onMounted(loadUsers)
     <table class="table table-bordered table-hover align-middle shadow rounded">
       <thead class="table-dark">
         <tr>
-          <th>ID</th>
+          <th class="d-none ">ID</th>
           <th>Tên đăng nhập</th>
           <th>Email</th>
           <th>Quyền</th>
-          <th>Thao tác</th>
+          <th>Phân Quyền</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="user in users" :key="user.id">
-          <td>{{ user.id }}</td>
+          <td class="d-none ">{{ user.id }}</td>
           <td>{{ user.username }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
           <td>
-            <select
+            <button
               v-if="currentUserRole === 'admin'"
-              v-model="user.role"
-              @change="handleChangeRole(user.id, user.role)"
-              class="form-select form-select-sm"
-              style="width: 120px"
+              class="btn btn-outline-primary btn-sm"
+              @click="openRolePopup(user)"
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
+              Phân quyền
+            </button>
             <span v-else>{{ user.role }}</span>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <RoleChangePopup
+      :show="isPopupVisible"
+      :user="selectedUser"
+      @close="closeRolePopup"
+      @role-changed="onRoleChanged"
+    />
   </div>
 </template>

@@ -23,6 +23,49 @@ const dsLop = ref([])
 const error = ref('')
 const success = ref('')
 const previewUrl = ref('/image/default-avatar.png')
+const errors = ref({})
+
+const checkEmailExists = async () => {
+  if (!student.value.email || !/^\S+@\S+\.\S+$/.test(student.value.email)) {
+    return
+  }
+  try {
+    const params = {
+      email: student.value.email,
+      maSV: (props.studentData && props.studentData.maSV) || 0,
+    }
+    const res = await apiClient.get('/sinhvien/checkemail', { params })
+    if (res.data.isEmailExist) {
+      errors.value.email = 'Email đã tồn tại trong hệ thống'
+    } else {
+      if (errors.value.email === 'Email đã tồn tại trong hệ thống') {
+        errors.value.email = ''
+      }
+    }
+  } catch (err) {
+    console.error('Lỗi khi kiểm tra email:', err)
+  }
+}
+
+const validateForm = async () => {
+  errors.value = {}
+  if (!student.value.hoTen) errors.value.hoTen = 'Họ tên không được để trống'
+  if (!student.value.email) {
+    errors.value.email = 'Email không được để trống'
+  } else if (!/^\S+@\S+\.\S+$/.test(student.value.email)) {
+    errors.value.email = 'Email không đúng định dạng'
+  }
+  if (!student.value.ngaySinh) errors.value.ngaySinh = 'Ngày sinh không được để trống'
+  if (!student.value.gioiTinh) errors.value.gioiTinh = 'Giới tính không được để trống'
+  if (!student.value.maKhoa) errors.value.maKhoa = 'Vui lòng chọn khoa'
+  if (!student.value.maLop) errors.value.maLop = 'Vui lòng chọn lớp'
+//check email có bị trùng hay không
+  if (!errors.value.email) {
+    await checkEmailExists()
+  }
+
+  return Object.keys(errors.value).length === 0
+}
 
 const handleFileChange = (e) => {
   const file = e.target.files[0]
@@ -100,9 +143,33 @@ const resetForm = () => {
   dsLop.value = []
   error.value = ''
   success.value = ''
+  errors.value = {}
+}
+
+
+const deleteStudent = async () => {
+  if (!student.value.maSV) return
+  if (confirm('Bạn có chắc chắn muốn xóa sinh viên này không?')) {
+    try {
+      const res = await apiClient.delete(`/sinhvien/delete/${student.value.maSV}`)
+      if (res.data.status) {
+        toastr.warning('Xóa sinh viên thành công')
+        resetForm()
+        emit('loadStudents')
+      } else {
+        toastr.error(res.data.message || 'Có lỗi xảy ra khi xóa!')
+      }
+    } catch (err) {
+      toastr.error(err.response?.data?.message || 'Có lỗi xảy ra!')
+    }
+  }
 }
 
 const submitForm = async () => {
+  const isValid = await validateForm()
+  if (!isValid) {
+    return
+  }
   error.value = ''
   success.value = ''
   try {
@@ -162,13 +229,20 @@ const submitForm = async () => {
               </div>
               <div class="col-md-12">
                 <label class="form-label">Họ tên</label>
-                <input v-model="student.hoTen" class="form-control" placeholder="Họ tên" required />
+                <input v-model="student.hoTen" class="form-control" placeholder="Họ tên" />
+                <div v-if="errors.hoTen" class="text-danger">{{ errors.hoTen }}</div>
               </div>
             </div>
             <div class="row mb-2">
               <div class="col-md-6">
                 <label class="form-label">Email</label>
-                <input v-model="student.email" class="form-control" placeholder="Email" required />
+                <input
+                  v-model="student.email"
+                  class="form-control"
+                  placeholder="Email"
+                  @blur="checkEmailExists"
+                />
+                <div v-if="errors.email" class="text-danger">{{ errors.email }}</div>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Ngày sinh</label>
@@ -178,6 +252,7 @@ const submitForm = async () => {
                   type="date"
                   placeholder="Ngày sinh"
                 />
+                <div v-if="errors.ngaySinh" class="text-danger">{{ errors.ngaySinh }}</div>
               </div>
             </div>
             <div class="row mb-2">
@@ -188,6 +263,7 @@ const submitForm = async () => {
                   <option>Nam</option>
                   <option>Nữ</option>
                 </select>
+                <div v-if="errors.gioiTinh" class="text-danger">{{ errors.gioiTinh }}</div>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Địa chỉ</label>
@@ -203,6 +279,7 @@ const submitForm = async () => {
                     {{ khoa.tenKhoa }}
                   </option>
                 </select>
+                <div v-if="errors.maKhoa" class="text-danger">{{ errors.maKhoa }}</div>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Lớp</label>
@@ -212,6 +289,7 @@ const submitForm = async () => {
                     {{ lop.tenLop }}
                   </option>
                 </select>
+                <div v-if="errors.maLop" class="text-danger">{{ errors.maLop }}</div>
               </div>
             </div>
           </div>
@@ -219,6 +297,14 @@ const submitForm = async () => {
         <div class="d-flex justify-content-end gap-2 mt-3">
           <button type="submit" class="btn btn-primary btn-sm">
             {{ student.maSV ? 'Lưu' : 'Thêm mới' }}
+          </button>
+          <button
+            v-if="student.maSV"
+            type="button"
+            class="btn btn-danger btn-sm"
+            @click="deleteStudent"
+          >
+            Xóa
           </button>
           <button type="button" class="btn btn-secondary btn-sm" @click="resetForm">
             Reset form
